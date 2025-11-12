@@ -1,0 +1,24 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Передача ставок в кол-центр - Контексты
+
+Person(client, "Пользователь", "Использует телефон")
+Person(call_customer, "Сотрудник кол-центра банка", "Информирует клиента о доступных предложениях")
+Person(call_parther, "Сотрудник кол-центра партнерского", "Информирует клиента о доступных предложениях")
+
+System_Boundary(system, "Система выдачи депозитов") {
+    System(abs, "Внутренняя система", "Предложения, информация о клиентах, скоринг")
+}
+
+System_Ext(telecom, "Телефонная линия")
+System_Ext(file, "Файл с информацией")
+
+Rel(client, telecom, "Вызов кол-центра")
+Rel(telecom, call_customer, "Переадресация звонка сотруднику кол-центра банка")
+Rel(telecom, call_parther, "Переадресация звонка сотруднику кол-центра партнерского")
+
+Rel(call_customer, abs, "Получение информации о предложении клиенту")
+Rel(call_parther, file, "Получение информации о предложении клиенту")
+
+@enduml

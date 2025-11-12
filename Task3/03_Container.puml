@@ -1,0 +1,58 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Открытие депозитов онлайн - Контейнеры
+
+Person(client, "Пользователь", "Использует сайт, интернет-банк")
+Person(call_customer, "Сотрудник кол-центра", "Информирует клиента о доступных предложениях")
+Person(back_customer, "Сотрудник бэк-оффиса", "ПРинимает решение о выдаче депозита")
+
+System_Boundary(system, "Система выдачи депозитов") {
+    Container(site, "Сайт", "ASp .Net")
+    Container(mobile_app, "Mobile App", "Kotlin/Java")
+    Container(api_gw, "API Gateway", "Nginx", "Маршрутизация запросов")
+    Container(auth_srv, "Сервис аутентификации", ".Net", "Авторизация/аутентификация пользователей")
+    Container(deposit_srv, "Сервис депозитов", ".Net", "Работа с депозитами")
+    Container(queue_mngr, "Очередь сообщений", "Kafka", "Очередь сообщений")
+    Container(sms_srv, "Сервис СМС-оповещений", ".Net", "Обработка очереди СМС-сообщений")
+    Container(core_srv, "АБС основной функционал", ".Net", "Основной функционал работы банка")
+    Container(db, "Database", "Oracle", "Хранение данных")
+    Container(back_app, "Приложение сотрудников бэк-офиса", "Delphi", "Приложение бэк-офиса")
+    Container(call_app, "Приложение сотрудников кол-центра", ".Net", "Приложение кол-центра")
+    Container(user_db, "Database", "PostgeSQL", "Хранение данных о пользователях")
+    Container(deposit_db, "Database", "PostgeSQL", "Хранение данных о депозитах")
+}
+
+System_Ext(internet, "Интернет") {
+    System_Ext(sms_gateway, "Стронний СМС-шлюз")
+    System_Ext(cbr, "БКИ")
+}
+
+Rel(client, site, "Информация о депозитах", "HTTPS")
+Rel(client, mobile_app, "Информация о депозитах", "4G/Wi-Fi")
+Rel(sms_gateway, client, "Отправка СМС-уведомлений")
+
+Rel(site, api_gw, "Работа с системой", "REST")
+Rel(mobile_app, api_gw, "Работа с системой", "REST")
+Rel(api_gw, auth_srv, "API", "REST")
+Rel(api_gw, deposit_srv, "API", "REST")
+Rel(auth_srv, user_db, "SQL", "SQL")
+
+Rel(deposit_srv, deposit_db, "Хранение", "SQL")
+Rel(deposit_srv, queue_mngr, "Отправка сообщений в обработку", "AMQP")
+
+Rel(sms_srv, queue_mngr, "Обработка сообщений на СМС", "AMQP")
+Rel(sms_srv, sms_gateway, "Обработка сообщений на СМС", "HTTPS")
+
+Rel(core_srv, queue_mngr, "Обработка сообщений заявок на депозит", "AMQP")
+Rel(core_srv, db, "Хранение", "SQL")
+Rel(core_srv, cbr, "Запрос кредитной истории клиента", "SQL")
+
+Rel(call_app, queue_mngr, "Обработка сообщений заявок на депозит", "AMQP")
+Rel(call_app, db, "Хранение", "SQL")
+Rel(call_customer, call_app, "Обработка сообщений заявок на депозит")
+
+Rel(back_app, db, "Хранение", "SQL")
+Rel(back_customer, back_app, "Принятие решения о депозите")
+
+@enduml
