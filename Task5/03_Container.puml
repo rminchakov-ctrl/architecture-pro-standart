@@ -1,0 +1,52 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Открытие кредитов онлайн - Контейнеры
+
+Person(client, "Пользователь", "Использует сайт, интернет-банк")
+
+System_Boundary(system, "Система выдачи кредитов") {
+    Container(site, "Сайт", "ASp .Net")
+    Container(mobile_app, "Mobile App", "Kotlin/Java")
+    Container(api_gw, "API Gateway", "Nginx", "Маршрутизация запросов")
+    Container(auth_srv, "Сервис аутентификации", ".Net", "Авторизация/аутентификация пользователей")
+    Container(credit_srv, "Сервис кредитов", ".Net", "Работа с кредитами")
+    Container(credit_conveyor, "Кредитный конвейер", "Camunda", "Обработка бизнес-процессов")
+    Container(credit_scoring, "Система кредитного скоринга", "Python", "Определение рейтинга клиента")
+    Container(queue_mngr, "Очередь сообщений", "Kafka", "Очередь сообщений")
+    Container(sms_srv, "Сервис СМС-оповещений", ".Net", "Обработка очереди СМС-сообщений")
+    Container(core_srv, "АБС основной функционал", ".Net", "Основной функционал работы банка")
+    Container(db, "Database", "Oracle", "Хранение данных")
+    Container(user_db, "Database", "PostgeSQL", "Хранение данных о пользователях")
+    Container(credit_db, "Database", "PostgeSQL", "Хранение данных о кредитах")
+}
+
+System_Ext(internet, "Интернет") {
+    System_Ext(sms_gateway, "Стронний СМС-шлюз")
+    System_Ext(cbr, "БКИ")
+}
+
+Rel(client, site, "Информация о кредитах", "HTTPS")
+Rel(client, mobile_app, "Информация о кредитах", "4G/Wi-Fi")
+Rel(sms_gateway, client, "Отправка СМС-уведомлений")
+
+Rel(site, api_gw, "Работа с системой", "REST")
+Rel(mobile_app, api_gw, "Работа с системой", "REST")
+Rel(api_gw, auth_srv, "API", "REST")
+Rel(api_gw, credit_srv, "API", "REST")
+Rel(auth_srv, user_db, "SQL", "SQL")
+
+Rel(credit_srv, credit_db, "Хранение", "SQL")
+Rel(credit_srv, queue_mngr, "Отправка сообщений в обработку", "AMQP")
+
+Rel(credit_conveyor, queue_mngr, "Обработка сообщений", "AMQP")
+Rel(credit_conveyor, credit_scoring, "Запрос рейтинга", "REST")
+Rel(credit_scoring, core_srv, "Запрос рейтинга", "REST")
+Rel(credit_scoring, cbr, "Запрос рейтинга", "HTTPS")
+
+Rel(sms_srv, queue_mngr, "Обработка сообщений на СМС", "AMQP")
+Rel(sms_srv, sms_gateway, "Обработка сообщений на СМС", "HTTPS")
+
+Rel(core_srv, db, "Хранение", "SQL")
+
+@enduml

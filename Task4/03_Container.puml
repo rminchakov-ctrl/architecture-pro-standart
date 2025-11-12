@@ -1,0 +1,41 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Передача ставок в кол-центр - Контейнеры
+
+Person(client, "Пользователь", "Использует телефон")
+Person(call_customer, "Сотрудник кол-центра банка", "Информирует клиента о доступных предложениях")
+Person(call_parther, "Сотрудник кол-центра партнерского", "Информирует клиента о доступных предложениях")
+
+System_Boundary(system, "Подсистема информирования кол-центра о депозитах") {
+    Container(deposit_srv, "Сервис депозитов", ".Net", "Периодический опрос о ставках депозитов")
+    Container(queue_mngr, "Очередь сообщений", "Kafka", "Очередь сообщений")
+    Container(email_srv, "Сервис отправки email", ".Net", "Обработка очереди, отправка email")
+    Container(core_srv, "АБС основной функционал", ".Net", "Основной функционал работы банка")
+    Container(db, "Database", "PostgeSQL", "Хранение данных")
+    Container(call_srv, "Сервис обновления данных кол-центра", ".Net", "Обработка очереди, запись в БД")
+    Container(call_app, "Приложение сотрудников кол-центра", ".Net", "Приложение кол-центра")
+}
+
+System_Ext(telecom, "Телефонная линия")
+System_Ext(file, "Файл с информацией")
+
+Rel(client, telecom, "Вызов кол-центра")
+Rel(telecom, call_customer, "Переадресация звонка сотруднику кол-центра банка")
+Rel(telecom, call_parther, "Переадресация звонка сотруднику кол-центра партнерского")
+
+Rel(call_customer, call_app, "Получение информации о предложении клиенту")
+Rel(call_parther, file, "Получение информации о предложении клиенту")
+
+Rel(deposit_srv, core_srv, "Информация о депозитах", "REST")
+Rel(deposit_srv, queue_mngr, "Информация об изменении депозитов", "AMQP")
+
+Rel(email_srv, queue_mngr, "Информация о депозитах, прослушивание очереди, формирование файла", "AMQP")
+Rel(email_srv, file, "Информация об изменении депозитов, отправка email", "SMTP")
+
+Rel(call_srv, queue_mngr, "Информация о депозитах, прослушивание очереди", "AMQP")
+Rel(call_srv, db, "Информация об изменении депозитов, запись в базу", "SQL")
+
+Rel(call_app, db, "Информация об изменении депозитов, получение информации", "SQL")
+
+@enduml

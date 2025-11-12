@@ -1,0 +1,44 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма интеграции приложений
+
+Person(front_office, "Сотрудник отделения")
+Person(call_office, "Сотрудник кол-центра")
+Person(call_parthner, "Сотрудник кол-центра партнерского")
+Person(deposit_office, "Сотрудник депозитного отдела")
+Person(credit_office, "Сотрудник кпедитного отдела")
+
+System_Boundary(system, "Система банка") {
+    System(callcenter_inner, "Кол-центр CRM", "Обработка звонков")
+    System(abs, "АБС", "Автоматизированная банковская система")
+    System(office_file, "Excel", "MS Office")
+    System(credit_conveyor, "Кредитный конвейер", "Кредитный конвейер")
+    System(credit_scoring, "Кредитный скоринг", "Кредитный скоринг")
+    System(rate_service, "Сервис ставок", "Расчет депозитных ставок")
+}
+
+System_Ext(callcenter_partner, "Кол-центр партнерский", "Обработка звонков")
+System_Ext(cbr_gateway, "ЦБ API", "Данные ЦБ")
+System_Ext(credit_bureau, "Бюро кредитных историй", "Данные БКИ")
+
+Rel(call_parthner, callcenter_partner, "Поддержка")
+
+Rel(abs, rate_service, "API", "Информация")
+Rel(rate_service, cbr_gateway, "HTTPS", "Информация")
+Rel(front_office, abs, "API", "Заявка на депозит/кредит")
+
+Rel(call_office, abs, "API", "Заявка на депозит")
+Rel(call_office, callcenter_inner, "API", "Заявка на депозит/Продажи")
+
+Rel(front_office, office_file, "")
+Rel(deposit_office, office_file, "")
+Rel(credit_office, office_file, "")
+
+Rel(deposit_office, abs, "API", "Заявка на депозит")
+Rel(credit_office, abs, "API", "Заявка на кредит")
+Rel(abs, credit_conveyor, "API", "Проверка кредитной истории")
+Rel(credit_conveyor, credit_scoring, "API", "Проверка кредитной истории")
+Rel(credit_scoring, credit_bureau, "API", "Проверка кредитной истории")
+
+@enduml

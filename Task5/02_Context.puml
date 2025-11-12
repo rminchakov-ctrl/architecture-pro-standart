@@ -1,0 +1,27 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Открытие кредитов онлайн - Контексты
+
+Person(client, "Пользователь", "Использует сайт, интернет-банк")
+
+System_Boundary(system, "Система выдачи кредитов") {
+    System(site, "Сайт", "Отображение предложений, принятие заявок")
+    System(mobile_app, "Интернет-банк", "Отображение предложений, принятие заявок")
+    System(abs, "Внутренняя система", "Предложения, информация о клиентах, скоринг")
+}
+
+System_Ext(sms_gateway, "Стронний СМС-шлюз")
+System_Ext(cbr, "БКИ")
+
+Rel(client, site, "Работа с сайтом", "HTTPS")
+Rel(client, mobile_app, "Работа с интернет-банком", "HTTPS")
+Rel(sms_gateway, client, "Отправка СМС-уведомлений")
+
+Rel(site, abs, "Получение данных", "HTTPS")
+Rel(mobile_app, abs, "Получение данных", "HTTPS")
+
+Rel(abs, sms_gateway, "Отправка запроса на СМС-уведомление", "HTTPS")
+Rel(abs, cbr, "Запрос кредитной истории клиента", "HTTPS")
+
+@enduml
